@@ -27,7 +27,7 @@ def on_message(client, userdata, msg):
     topicParts = msg.topic.split('/')
     
     if len(topicParts) != 4:
-        continue
+        return
 
     # create payload
     payload = {'device': topicParts[0],
