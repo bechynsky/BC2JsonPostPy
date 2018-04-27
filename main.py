@@ -15,25 +15,34 @@ configuration = configparser.ConfigParser()
 configuration.read('config.ini')
 
 URL = configuration['DEFAULT']['URL']
-MQTT_SERVER = configuration['DEFAULT']['MQTT_SERVR']
-MQTT_PORT = configuration['DEFAULT']['MQTT_PORT']
+MQTT_SERVER = configuration['DEFAULT']['MQTT_SERVER']
+MQTT_PORT = int(configuration['DEFAULT']['MQTT_PORT'])
 
 # This is reqired by Request trigger
 HEADER = {'Content-Type': 'application/json'}
+
+
+# The callback for when the client receives a CONNACK response from the server.
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe("#")
 
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     topicParts = msg.topic.split('/')
     
-    if len(topicParts) != 4:
+    if len(topicParts) != 5:
         return
 
     # create payload
-    payload = {'device': topicParts[0],
-                'sensor': topicParts[1], 
-                'sensorInfo': topicParts[2], 
-                'measurement': topicParts[3],
+    payload = {'device': topicParts[1],
+                'sensor': topicParts[2], 
+                'sensorInfo': topicParts[3], 
+                'measurement': topicParts[4],
                 'value': msg.payload,
                 'time': time.strftime("%Y-%m-%d %H:%M:%S")}
 
@@ -47,8 +56,12 @@ def on_message(client, userdata, msg):
 
 
 client = mqtt.Client()
+client.on_connect = on_connect
 client.on_message = on_message
 
 client.connect(MQTT_SERVER, MQTT_PORT, 60)
 
-client.loop_forever()
+try:
+    client.loop_forever()
+except KeyboardInterrupt:
+    print("END")
