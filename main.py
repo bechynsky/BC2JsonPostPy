@@ -5,7 +5,7 @@ import configparser
 import paho.mqtt.client as mqtt
 
 
-# creta config.ini file
+# creta config.ini file, this file is ignored by git
 # if URL contains % use %%
 # [DEFAULT]
 # URL = https://...
@@ -14,11 +14,12 @@ import paho.mqtt.client as mqtt
 configuration = configparser.ConfigParser()
 configuration.read('config.ini')
 
+# read configuration
 URL = configuration['DEFAULT']['URL']
 MQTT_SERVER = configuration['DEFAULT']['MQTT_SERVER']
 MQTT_PORT = int(configuration['DEFAULT']['MQTT_PORT'])
 
-# This is reqired by Request trigger
+# Example of headers
 HEADER = {'Content-Type': 'application/json'}
 
 
@@ -38,7 +39,7 @@ def on_message(client, userdata, msg):
     if len(topicParts) != 5:
         return
 
-    # create payload
+    # create payload, it will be converted to JSON
     payload = {'device': topicParts[1],
                 'sensor': topicParts[2], 
                 'sensorInfo': topicParts[3], 
@@ -50,7 +51,7 @@ def on_message(client, userdata, msg):
 
     # send payload, payload is converted to JSON
     r = requests.post(URL, json = payload, headers=HEADER)
-    # proper return code is 202 (Accepted), https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
+    # response code
     print(r.status_code)
     
 
